@@ -5,7 +5,7 @@ const {
   defaultError,
 } = require("../utils/errors");
 
-//GET /items
+// GET /items
 const getClothingItems = (req, res) => {
   ClothingItem.find({})
     .then((items) => res.status(200).send(items))
@@ -17,7 +17,7 @@ const getClothingItems = (req, res) => {
     });
 };
 
-//POST /items
+// POST /items
 const createClothingItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
   const owner = req.user._id;
@@ -28,15 +28,15 @@ const createClothingItem = (req, res) => {
       console.error(err);
       if (err.name === "ValidationError") {
         return res.status(invalidError).send({ message: err.message });
-      } else {
+      } 
         return res
           .status(defaultError)
           .send({ message: "Requested resource not found." });
-      }
+      
     });
 };
 
-//DELETE /items/:itemId
+// DELETE /items/:itemId
 const deleteClothingItem = (req, res) => {
   const { itemId } = req.params;
 
@@ -47,17 +47,17 @@ const deleteClothingItem = (req, res) => {
       console.error(err);
       if (err.name === "CastError") {
         return res.status(invalidError).send({ message: err.message });
-      } else if (err.name === "DocumentNotFoundError") {
+      } if (err.name === "DocumentNotFoundError") {
         return res.status(notFoundError).send({ message: err.message });
-      } else {
+      } 
         return res
           .status(defaultError)
           .send({ message: "Requested resource not found" });
-      }
+      
     });
 };
 
-//PUT /items/:itemId/likes
+// PUT /items/:itemId/likes
 const likeItem = (req, res) => {
   const { itemId } = req.params;
   const user = req.user._id;
@@ -73,17 +73,17 @@ const likeItem = (req, res) => {
       console.error(err);
       if (err.name === "CastError") {
         return res.status(invalidError).send({ message: err.message });
-      } else if (err.name === "DocumentNotFoundError") {
+      } if (err.name === "DocumentNotFoundError") {
         return res.status(notFoundError).send({ message: err.message });
-      } else {
+      } 
         return res
           .status(defaultError)
           .send({ message: "Requested resource not found" });
-      }
+      
     });
 };
 
-//DELETE /items/:itemId/likes
+// DELETE /items/:itemId/likes
 const unlikeItem = (req, res) => {
   const { itemId } = req.params;
   const user = req.user._id;
@@ -100,13 +100,13 @@ const unlikeItem = (req, res) => {
       console.log(err.name);
       if (err.name === "CastError") {
         return res.status(invalidError).send({ message: err.message });
-      } else if (err.name === "DocumentNotFoundError") {
+      } if (err.name === "DocumentNotFoundError") {
         return res.status(notFoundError).send({ message: err.message });
-      } else {
+      } 
         return res
           .status(defaultError)
           .send({ message: "Requested resource not found" });
-      }
+      
     });
 };
 

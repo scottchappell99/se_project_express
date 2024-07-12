@@ -5,7 +5,7 @@ const {
   defaultError,
 } = require("../utils/errors");
 
-//GET /users
+// GET /users
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => res.status(200).send(users))
@@ -17,7 +17,7 @@ const getUsers = (req, res) => {
     });
 };
 
-//POST /users
+// POST /users
 const createUser = (req, res) => {
   const { name, avatar } = req.body;
 
@@ -27,15 +27,15 @@ const createUser = (req, res) => {
       console.error(err);
       if (err.name === "ValidationError") {
         return res.status(invalidError).send({ message: err.message });
-      } else {
+      } 
         return res
           .status(defaultError)
           .send({ message: "Requested resource not found." });
-      }
+      
     });
 };
 
-//GET /users/:userId
+// GET /users/:userId
 const getUserById = (req, res) => {
   const { userId } = req.params;
 
@@ -46,13 +46,13 @@ const getUserById = (req, res) => {
       console.error(err);
       if (err.name === "CastError") {
         return res.status(invalidError).send({ message: err.message });
-      } else if (err.name === "DocumentNotFoundError") {
+      } if (err.name === "DocumentNotFoundError") {
         return res.status(notFoundError).send({ message: err.message });
-      } else {
+      } 
         return res
           .status(defaultError)
           .send({ message: "Requested resource not found." });
-      }
+      
     });
 };
 
