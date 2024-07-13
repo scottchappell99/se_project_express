@@ -8,12 +8,12 @@ const {
 // GET /users
 const getUsers = (req, res) => {
   User.find({})
-    .then((users) => res.status(200).send(users))
+    .then((users) => res.send(users))
     .catch((err) => {
       console.error(err);
       return res
         .status(defaultError)
-        .send({ message: "Requested resource not found." });
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -26,12 +26,11 @@ const createUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(invalidError).send({ message: err.message });
-      } 
-        return res
-          .status(defaultError)
-          .send({ message: "Requested resource not found." });
-      
+        return res.status(invalidError).send({ message: "Invalid Data" });
+      }
+      return res
+        .status(defaultError)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -41,18 +40,18 @@ const getUserById = (req, res) => {
 
   User.findById(userId)
     .orFail()
-    .then((user) => res.status(200).send(user))
+    .then((user) => res.send(user))
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        return res.status(invalidError).send({ message: err.message });
-      } if (err.name === "DocumentNotFoundError") {
-        return res.status(notFoundError).send({ message: err.message });
-      } 
-        return res
-          .status(defaultError)
-          .send({ message: "Requested resource not found." });
-      
+        return res.status(invalidError).send({ message: "Invalid Data" });
+      }
+      if (err.name === "DocumentNotFoundError") {
+        return res.status(notFoundError).send({ message: "Not Found" });
+      }
+      return res
+        .status(defaultError)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
