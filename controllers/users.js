@@ -1,11 +1,16 @@
 const User = require("../models/user");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
 const {
   invalidError,
+  unauthError,
   notFoundError,
   defaultError,
 } = require("../utils/errors");
+const { JWT_SECRET } = require("../utils/config");
 
-// GET /users
+// GET all users
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send(users))
@@ -17,12 +22,18 @@ const getUsers = (req, res) => {
     });
 };
 
-// POST /users
+// POST new user
 const createUser = (req, res) => {
-  const { name, avatar } = req.body;
-
-  User.create({ name, avatar })
-    .then((user) => res.status(201).send(user))
+  const { name, avatar, email, password } = req.body;
+  bcrypt
+    .hash(password, 10)
+    .then(User.create({ name, avatar, email, hash }))
+    .then((user) => {
+      if (user === "11000") {
+        throw new Error("This email is already attached to a user.");
+      }
+      res.status(201).send(user);
+    })
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
@@ -34,7 +45,25 @@ const createUser = (req, res) => {
     });
 };
 
-// GET /users/:userId
+//POST login
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+      res
+        .status(unauthError)
+        .send({ message: "Incorrect user name or password." });
+    });
+};
+
+// GET user by _id
 const getUserById = (req, res) => {
   const { userId } = req.params;
 
