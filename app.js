@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 const indexRouter = require("./routes/index");
 
 const app = express();
@@ -12,14 +13,8 @@ mongoose
   })
   .catch(console.error);
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: "669170251963f14b4a8a1b99",
-  };
-  next();
-});
-
 app.use(express.json());
+app.use(cors());
 
 app.use("/", indexRouter);
 

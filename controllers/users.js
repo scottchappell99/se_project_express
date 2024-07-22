@@ -1,11 +1,11 @@
-const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const User = require("../models/user");
 
 const {
   invalidError,
-  unauthError,
   notFoundError,
+  conflictError,
   defaultError,
 } = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
@@ -25,19 +25,27 @@ const getUsers = (req, res) => {
 // POST new user
 const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
+
   bcrypt
     .hash(password, 10)
-    .then(User.create({ name, avatar, email, hash }))
+    .then((hash) => User.create({ name, avatar, email, password: hash }))
     .then((user) => {
-      if (user === "11000") {
-        throw new Error("This email is already attached to a user.");
-      }
-      res.status(201).send(user);
+      res.status(201).send({
+        name: user.name,
+        avatar: user.avatar,
+        email: user.email,
+        _id: user._id,
+      });
     })
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
         return res.status(invalidError).send({ message: "Invalid Data" });
+      }
+      if (err.code === 11000) {
+        return res
+          .status(conflictError)
+          .send({ message: "Another user already exists with that email" });
       }
       return res
         .status(defaultError)
@@ -45,7 +53,7 @@ const createUser = (req, res) => {
     });
 };
 
-//POST login
+// POST login
 const login = (req, res) => {
   const { email, password } = req.body;
 
@@ -54,11 +62,12 @@ const login = (req, res) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
+      res.send({ token });
     })
     .catch((err) => {
       console.error(err);
       res
-        .status(unauthError)
+        .status(invalidError)
         .send({ message: "Incorrect user name or password." });
     });
 };
@@ -84,4 +93,45 @@ const getUserById = (req, res) => {
     });
 };
 
-module.exports = { getUsers, createUser, login, getUserById };
+// GET current user
+const getCurrentUser = (req, res) => {
+  const userId = req.user;
+
+  User.findById(userId)
+    .orFail()
+    .then((user) => res.send(user))
+    .catch((err) => {
+      console.error(err);
+      return res
+        .status(defaultError)
+        .send({ message: "An error has occurred on the server." });
+    });
+};
+
+// PATCH current user
+const updateCurrentUser = (req, res) => {
+  const { user } = req;
+  const { name, avatar } = req.body;
+
+  User.findOneAndUpdate(
+    user,
+    { name, avatar },
+    { runValidators: true, new: true }
+  )
+    .then((updatedUser) => res.send(updatedUser))
+    .catch((err) => {
+      console.error(err);
+      return res
+        .status(defaultError)
+        .send({ message: "An error has occurred on the server." });
+    });
+};
+
+module.exports = {
+  getUsers,
+  createUser,
+  login,
+  getUserById,
+  getCurrentUser,
+  updateCurrentUser,
+};

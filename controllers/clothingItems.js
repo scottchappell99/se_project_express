@@ -1,6 +1,7 @@
 const ClothingItem = require("../models/clothingItem");
 const {
   invalidError,
+  forbiddenError,
   notFoundError,
   defaultError,
 } = require("../utils/errors");
@@ -41,14 +42,22 @@ const deleteClothingItem = (req, res) => {
 
   ClothingItem.findByIdAndDelete(itemId)
     .orFail()
-    .then((item) => res.send(item))
+    .then((item) => {
+      if (item.owner.toString() !== req.user._id) {
+        return Promise.reject(new Error("Forbidden"));
+      }
+      return res.send(item);
+    })
     .catch((err) => {
-      console.error(err);
+      console.error(err.name);
       if (err.name === "CastError") {
         return res.status(invalidError).send({ message: "Invalid Data" });
       }
       if (err.name === "DocumentNotFoundError") {
         return res.status(notFoundError).send({ message: "Not Found" });
+      }
+      if (err.message === "Forbidden") {
+        return res.status(forbiddenError).send({ message: "Forbidden" });
       }
       return res
         .status(defaultError)
