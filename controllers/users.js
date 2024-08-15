@@ -3,11 +3,11 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
 const {
-  invalidError,
-  notFoundError,
-  conflictError,
-  defaultError,
-  unauthError,
+  BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
 } = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
 
@@ -27,18 +27,13 @@ const createUser = (req, res) => {
       });
     })
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(invalidError).send({ message: "Invalid Data." });
+        next(new BadRequestError("Invalid Data."));
+      } else if (err.code === 11000) {
+        next(new ConflictError("Another user already exists with that email"));
+      } else {
+        next(err);
       }
-      if (err.code === 11000) {
-        return res
-          .status(conflictError)
-          .send({ message: "Another user already exists with that email." });
-      }
-      return res
-        .status(defaultError)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -47,9 +42,7 @@ const login = (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(invalidError)
-      .send({ message: "Incorrect user name or password." });
+    next(new BadRequestError("Incorrect user name or password"));
   }
 
   return User.findUserByCredentials(email, password)
@@ -60,35 +53,27 @@ const login = (req, res) => {
       res.send({ token });
     })
     .catch((err) => {
-      console.error(err);
       if (err.message === "401") {
-        return res
-          .status(unauthError)
-          .send({ message: "Incorrect user name or password." });
+        next(new UnauthorizedError("Incorrect user name or password."));
+      } else {
+        next(err);
       }
-      return res
-        .status(defaultError)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
 // GET current user
 const getCurrentUser = (req, res) => {
-  const userId = req.user;
+  const _id = req.user;
 
-  User.findById(userId)
+  User.findById(_id)
     .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
-      console.error(err);
       if (err.name === "DocumentNotFoundError") {
-        return res
-          .status(notFoundError)
-          .send({ message: "Requested user not found." });
+        next(new NotFoundError("Requested user not found."));
+      } else {
+        next(err);
       }
-      return res
-        .status(defaultError)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -104,13 +89,11 @@ const updateCurrentUser = (req, res) => {
   )
     .then((updatedUser) => res.send(updatedUser))
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(invalidError).send({ message: "Invalid Data." });
+        next(new BadRequestError("Invalid Data."));
+      } else {
+        next(err);
       }
-      return res
-        .status(defaultError)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 

@@ -1,9 +1,10 @@
 const ClothingItem = require("../models/clothingItem");
 const {
-  invalidError,
-  forbiddenError,
-  notFoundError,
-  defaultError,
+  BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
 } = require("../utils/errors");
 
 // GET items
@@ -11,10 +12,7 @@ const getClothingItems = (req, res) => {
   ClothingItem.find({})
     .then((items) => res.send(items))
     .catch((err) => {
-      console.error(err);
-      return res
-        .status(defaultError)
-        .send({ message: "An error has occurred on the server." });
+      next(err);
     });
 };
 
@@ -26,13 +24,11 @@ const createClothingItem = (req, res) => {
   ClothingItem.create({ name, weather, imageUrl, owner })
     .then((item) => res.status(201).send(item))
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(invalidError).send({ message: "Invalid Data." });
+        next(new BadRequestError("Invalid Data."));
+      } else {
+        next(err);
       }
-      return res
-        .status(defaultError)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -44,25 +40,21 @@ const deleteClothingItem = (req, res) => {
     .orFail()
     .then((item) => {
       if (item.owner.toString() !== req.user._id) {
-        return res
-          .status(forbiddenError)
-          .send({ message: "You are not authorized to delete this item." });
+        next(new ForbiddenError("You are not authorized to delete this item."));
+      } else {
+        return item
+          .deleteOne()
+          .then(() => res.send({ message: "Item deleted." }));
       }
-      return item
-        .deleteOne()
-        .then(() => res.send({ message: "Item deleted." }));
     })
     .catch((err) => {
-      console.error(err.name);
       if (err.name === "CastError") {
-        return res.status(invalidError).send({ message: "Invalid Data." });
+        next(new BadRequestError("Invalid Data."));
+      } else if (err.name === "DocumentNotFoundError") {
+        next(new NotFoundError("Item Not Found."));
+      } else {
+        next(err);
       }
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(notFoundError).send({ message: "Not Found." });
-      }
-      return res
-        .status(defaultError)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -79,16 +71,13 @@ const likeItem = (req, res) => {
     .orFail()
     .then((item) => res.status(201).send(item))
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
-        return res.status(invalidError).send({ message: "Invalid Data." });
+        next(new BadRequestError("Invalid Data."));
+      } else if (err.name === "DocumentNotFoundError") {
+        next(new NotFoundError("Item Not Found."));
+      } else {
+        next(err);
       }
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(notFoundError).send({ message: "Not Found." });
-      }
-      return res
-        .status(defaultError)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -105,17 +94,14 @@ const unlikeItem = (req, res) => {
     .orFail()
     .then((item) => res.send(item))
     .catch((err) => {
-      console.error(err);
       console.log(err.name);
       if (err.name === "CastError") {
-        return res.status(invalidError).send({ message: "Invalid Data." });
+        next(new BadRequestError("Invalid Data."));
+      } else if (err.name === "DocumentNotFoundError") {
+        next(new NotFoundError("Item Not Found."));
+      } else {
+        next(err);
       }
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(notFoundError).send({ message: "Not Found." });
-      }
-      return res
-        .status(defaultError)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
