@@ -11,3 +11,7 @@ This is the backend of the WTWR Project. It is an Express app, using MongoDB. Th
 ### Testing
 
 Before committing your code, make sure you edit the file `sprint.txt` in the root folder. The file `sprint.txt` should contain the number of the sprint you're currently working on. For ex. 12
+
+## The project is online
+
+You can find the full backend and frontend of this project at [scottchappell.punked.us](https://scottchappell.punked.us).
