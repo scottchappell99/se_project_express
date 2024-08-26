@@ -1,18 +1,15 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user");
 
-const {
-  BadRequestError,
-  UnauthorizedError,
-  ForbiddenError,
-  NotFoundError,
-  ConflictError,
-} = require("../utils/errors");
+const User = require("../models/user");
+const { BadRequestError } = require("../utils/errors/BadRequestError");
+const { ConflictError } = require("../utils/errors/ConflictError");
+const { UnauthorizedError } = require("../utils/errors/UnauthorizedError");
+const { NotFoundError } = require("../utils/errors/NotFoundError");
 const { JWT_SECRET } = require("../utils/config");
 
 // POST new user
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
 
   bcrypt
@@ -38,7 +35,7 @@ const createUser = (req, res) => {
 };
 
 // POST login
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -62,7 +59,7 @@ const login = (req, res) => {
 };
 
 // GET current user
-const getCurrentUser = (req, res) => {
+const getCurrentUser = (req, res, next) => {
   const _id = req.user;
 
   User.findById(_id)
@@ -78,7 +75,7 @@ const getCurrentUser = (req, res) => {
 };
 
 // PATCH current user
-const updateCurrentUser = (req, res) => {
+const updateCurrentUser = (req, res, next) => {
   const { user } = req;
   const { name, avatar } = req.body;
 

@@ -14,12 +14,12 @@ const {
 
 router.get("/", getClothingItems);
 
-router.post("/", validateClothingItemBody, auth, createClothingItem);
+router.post("/", auth, validateClothingItemBody, createClothingItem);
 
-router.delete("/:itemId", validateItemId, auth, deleteClothingItem);
+router.delete("/:itemId", auth, validateItemId, deleteClothingItem);
 
-router.put("/:itemId/likes", validateItemId, auth, likeItem);
+router.put("/:itemId/likes", auth, validateItemId, likeItem);
 
-router.delete("/:itemId/likes", validateItemId, auth, unlikeItem);
+router.delete("/:itemId/likes", auth, validateItemId, unlikeItem);
 
 module.exports = router;
